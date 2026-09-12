@@ -83,8 +83,19 @@ app.get('/', (req, res) => {
 });
 
 // 대시보드 HTML 파일 제공
+// 대시보드 HTML 파일 제공
 app.get('/dashboard', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// 🛒 포인트 상점 페이지 라우트 추가
+app.get('/shop', checkAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'shop.html'));
+});
+
+// 🏆 실시간 랭킹 페이지 라우트 추가
+app.get('/ranking', checkAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'ranking.html'));
 });
 
 // 현재 로그인한 유저 정보 API
@@ -143,17 +154,6 @@ app.post('/api/shop/buy', checkAuth, (req, res) => {
     });
 });
 
-// 상점 페이지 라우트
-app.get('/shop', (req, res) => {
-    if (!req.session.user) return res.redirect('/'); // 로그인 확인 처리 (구조에 맞게 수정)
-    res.sendFile(__dirname + '/shop.html');
-});
-
-// 실시간 랭킹 페이지 라우트
-app.get('/ranking', (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    res.sendFile(__dirname + '/ranking.html');
-});
 
 let botSocket = null;
 let latestRankings = [];
