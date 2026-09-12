@@ -16,46 +16,79 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET || '';
 const CALLBACK_URL = process.env.CALLBACK_URL || 'https://luacn-server-point-bot-deshboard.onrender.com/auth/discord/callback';
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
 
-app.use(express.json());
+// 세션 설정 (Render 환경에 맞게 안전하게 설정)
 app.use(session({
-    secret: 'luacn-secret-key-9999',
+    secret: 'luacn-super-secret-key-2026',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { 
+        secure: false, // Render는 기본 HTTP 프록시를 쓰므로 false가 안전합니다
+        maxAge: 24 * 60 * 60 * 1000 // 24시간
+    }
 }));
 
+app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(obj, done));
+// Passport 직렬화 설정 (에러 방어용)
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
 
+passport.deserializeUser((obj, done) => {
+    done(null, obj);
+});
+
+// 디스코드 OAuth2 전략 설정
 passport.use(new DiscordStrategy({
     clientID: CLIENT_ID,
     clientSecret: CLIENT_SECRET,
     callbackURL: CALLBACK_URL,
     scope: ['identify']
 }, (accessToken, refreshToken, profile, done) => {
-    return done(null, profile);
+    try {
+        return done(null, profile);
+    } catch (err) {
+        return done(err, null);
+    }
 }));
 
+// 로그인 라우트
 app.get('/auth/discord', passport.authenticate('discord'));
-app.get('/auth/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => {
-    res.redirect('/dashboard');
-});
 
-app.get('/logout', (req, res) => {
-    req.logout(() => {
+// 콜백 라우트 (여기서 500 에러가 나던 지점입니다)
+app.get('/auth/discord/callback', 
+    passport.authenticate('discord', { 
+        failureRedirect: '/',
+        failureMessage: true 
+    }), 
+    (req, res) => {
+        // 로그인 성공 시 대시보드로 이동
+        res.redirect('/dashboard');
+    }
+);
+
+app.get('/logout', (req, res, next) => {
+    req.logout((err) => {
+        if (err) return next(err);
         res.redirect('/');
     });
 });
 
+// 인증 미들웨어
 function checkAuth(req, res, next) {
-    if (req.isAuthenticated()) return next();
+    if (req.isAuthenticated && req.isAuthenticated()) {
+        return next();
+    }
     res.redirect('/');
 }
 
+// 메인 페이지 (로그인 버튼)
 app.get('/', (req, res) => {
-    if (req.isAuthenticated()) return res.redirect('/dashboard');
+    if (req.isAuthenticated && req.isAuthenticated()) {
+        return res.redirect('/dashboard');
+    }
     res.send(`
         <div style="text-align:center; margin-top: 100px; font-family: sans-serif; background-color: #1e1f22; color: white; height: 100vh; padding-top: 50px;">
             <h1>🤖 루칸 포인트 대시보드</h1>
@@ -66,21 +99,31 @@ app.get('/', (req, res) => {
     `);
 });
 
+// 대시보드 HTML 파일 제공
 app.get('/dashboard', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
+// 현재 로그인한 유저 정보 API
 app.get('/api/user', checkAuth, (req, res) => {
-    res.json({
-        id: req.user.id,
-        username: req.user.username,
-        avatar: req.user.avatar 
-            ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png`
-            : `https://cdn.discordapp.com/embed/avatars/0.png`
-    });
+    try {
+        const user = req.user;
+        const avatarUrl = user.avatar 
+            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+            : `https://cdn.discordapp.com/embed/avatars/0.png`;
+
+        res.json({
+            id: user.id,
+            username: user.username,
+            avatar: avatarUrl
+        });
+    } catch (err) {
+        console.error('API /api/user 에러:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
-// 디스코드 ID로 유저 프로필 조회 API
+// 타 유저 프로필 조회 API
 app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
     const targetId = req.params.id;
     try {
