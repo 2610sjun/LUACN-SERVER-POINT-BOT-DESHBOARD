@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>실시간 랭킹 - 루칸 대시보드</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1f22; color: #f2f3f5; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #313338; padding-bottom: 15px; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info img { width: 42px; height: 42px; border-radius: 50%; border: 2px solid #5865f2; }
+        .point-badge { background: #2b2d31; border: 1px solid #f0b232; color: #f0b232; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .btn-logout { background: #da373c; color: white; text-decoration: none; padding: 7px 14px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+
+        .nav-bar { display: flex; gap: 10px; margin-top: 20px; background: #2b2d31; padding: 10px 15px; border-radius: 8px; align-items: center; }
+        .nav-link { background: #313338; color: #f2f3f5; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 6px; border: 1px solid #3f4147; }
+        .nav-link:hover { background: #3f4147; color: white; border-color: #5865f2; }
+        .nav-link.active { background: #5865f2; color: white; border-color: #5865f2; }
+
+        .container { max-width: 800px; margin: 20px auto; background: #2b2d31; padding: 25px; border-radius: 8px; }
+        h2 { border-bottom: 1px solid #3f4147; padding-bottom: 10px; color: #5865f2; margin-top: 0; }
+        
+        .ranking-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: #313338; border-radius: 6px; margin-bottom: 10px; }
+        .ranking-rank { font-weight: bold; color: #f0b232; width: 50px; font-size: 16px; }
+        .ranking-user { flex: 1; font-size: 15px; }
+        .ranking-point { font-weight: bold; color: #f0b232; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🤖 루칸 포인트 대시보드</h1>
+        <div class="user-info">
+            <div class="point-badge">💰 <span id="my-point">0</span> P</div>
+            <img id="user-avatar" src="" alt="Avatar">
+            <span id="user-name">불러오는 중...</span>
+            <a href="/logout" class="btn-logout">로그아웃</a>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <a href="/dashboard" class="nav-link">🏠 대시보드 홈</a>
+        <a href="/shop" class="nav-link">🛒 포인트 상점</a>
+        <a href="/ranking" class="nav-link active">🏆 실시간 랭킹</a>
+    </div>
+
+    <div class="container">
+        <h2>🏆 실시간 서버 랭킹 (TOP 10)</h2>
+        <p style="font-size: 13px; color: #949ba4; margin-bottom: 20px;">서버 내 포인트 보유량 기준 상위 10명의 실시간 순위입니다.</p>
+        
+        <div id="ranking-container">
+            <p style="color: #949ba4; text-align: center; padding: 30px;">랭킹 정보를 불러오는 중...</p>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        fetch('/api/user')
+            .then(res => res.json())
+            .then(user => {
+                document.getElementById('user-name').innerText = user.username;
+                document.getElementById('user-avatar').src = user.avatar;
+                socket.emit('request_user_point', { user_id: user.id });
+                socket.emit('request_ranking');
+            });
+
+        socket.on('update_user_point', (res) => {
+            document.getElementById('my-point').innerText = res.point.toLocaleString();
+        });
+
+        socket.on('update_ranking_data', (rankings) => {
+            const container = document.getElementById('ranking-container');
+            if (!rankings || rankings.length === 0) {
+                container.innerHTML = '<p style="color: #949ba4; text-align: center; padding: 30px;">랭킹 데이터가 없습니다.</p>';
+                return;
+            }
+
+            let html = '';
+            const medals = { 0: '🥇', 1: '🥈', 2: '🥉' };
+            rankings.forEach((item, index) => {
+                const badge = medals[index] || `${index + 1}등`;
+                html += `
+                    <div class="ranking-item">
+                        <span class="ranking-rank">${badge}</span>
+                        <span class="ranking-user">유저 ID: ${item.user_id}</span>
+                        <span class="ranking-point">${item.points.toLocaleString()} P</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        });
+
+        setInterval(() => {
+            socket.emit('request_ranking');
+        }, 5000);
+    </script>
+</body>
+</html>
