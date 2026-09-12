@@ -16,7 +16,7 @@
         .btn-logout { background: #da373c; color: white; text-decoration: none; padding: 7px 14px; border-radius: 4px; font-size: 13px; font-weight: bold; }
 
         .container { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
-        .section { flex: 1; min-width: 300px; background: #2b2d31; padding: 20px; border-radius: 8px; }
+        .section { flex: 1; min-width: 300px; background: #2b2d31; padding: 20px; border-radius: 8px; box-sizing: border-box; }
         h2 { border-bottom: 1px solid #3f4147; padding-bottom: 10px; color: #5865f2; margin-top: 0; }
         
         .mission-card { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 12px; }
@@ -28,12 +28,23 @@
         .badge-complete { background: #23a55a; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; }
 
         .cmd-list { list-style: none; padding: 0; margin: 0; }
-        .cmd-item { margin-bottom: 10px; padding: 8px 12px; background: #313338; border-radius: 6px; font-size: 13px; }
+        .cmd-item { margin-bottom: 10px; padding: 8px 12px; background: #313338; border-radius: 6px; }
         .cmd-name { font-weight: bold; color: #57f287; }
 
         .auction-card { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .bid-input { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; }
         .btn-bid { padding: 8px 15px; background: #5865f2; border: none; color: white; border-radius: 4px; cursor: pointer; }
+
+        /* 상점 및 랭킹 전용 추가 스타일 */
+        .shop-item { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .shop-info { flex: 1; margin-right: 15px; }
+        .btn-shop { background: #5865f2; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .btn-shop:hover { background: #4752c4; }
+
+        .ranking-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #313338; border-radius: 6px; margin-bottom: 8px; }
+        .ranking-rank { font-weight: bold; color: #f0b232; width: 35px; }
+        .ranking-user { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ranking-point { font-weight: bold; color: #f0b232; }
 
         /* 모달 스타일 */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
@@ -41,8 +52,7 @@
         .modal-input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; }
         .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
 
-        /* 디스코드 프로필 카드 스타일 */
-        .target-profile-card { display: flex; align-items: center; background: #1e1f22; border: 1px solid #3f4147; padding: 10px; border-radius: 6px; margin-top: 8px; gap: 12px; display: none; }
+        .target-profile-card { display: flex; align-items: center; background: #1e1f22; border: 1px solid #3f4147; padding: 10px; border-radius: 6px; margin-top: 8px; display: none; gap: 12px; }
         .target-profile-card img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #5865f2; }
         .profile-info { display: flex; flex-direction: column; overflow: hidden; }
         .profile-name { font-weight: bold; font-size: 14px; color: #f2f3f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -69,23 +79,51 @@
     </div>
 
     <div class="container">
-        <div class="section">
+        <!-- 첫 번째 열: 일일 미션 & 포인트 상점 -->
+        <div class="section" style="flex: 1.2;">
             <h2>🎯 오늘의 일일 미션</h2>
             <div id="mission-container">미션 정보를 불러오는 중...</div>
+
+            <h2 style="margin-top: 30px;">🛒 포인트 상점</h2>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div style="font-weight: bold; font-size: 15px;">⚡ 레인드롭 소환</div>
+                    <div style="font-size: 12px; color: #949ba4; margin-top: 2px;">지정된 채팅 채널에 즉시 퀴즈를 발생시킵니다.</div>
+                    <div style="font-size: 12px; color: #f0b232; font-weight: bold; margin-top: 4px;">가격: 60 P</div>
+                </div>
+                <button class="btn-shop" onclick="buyItem('raindrop')">구매하기</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div style="font-weight: bold; font-size: 15px;">👑 특별 디스코드 역할</div>
+                    <div style="font-size: 12px; color: #949ba4; margin-top: 2px;">서버에서 사용 가능한 전용 역할을 즉시 지급받습니다.</div>
+                    <div style="font-size: 12px; color: #f0b232; font-weight: bold; margin-top: 4px;">가격: 300 P</div>
+                </div>
+                <button class="btn-shop" onclick="buyItem('role')">구매하기</button>
+            </div>
         </div>
 
-        <div class="section">
-            <h2>📜 봇 명령어 목록</h2>
+        <!-- 두 번째 열: 실시간 랭킹 & 봇 명령어 -->
+        <div class="section" style="flex: 1.2;">
+            <h2>🏆 실시간 서버 랭킹 (TOP 10)</h2>
+            <div id="ranking-container">
+                <p style="color: #949ba4; text-align: center;">랭킹 정보를 불러오는 중...</p>
+            </div>
+
+            <h2 style="margin-top: 30px;">📜 봇 명령어 목록</h2>
             <ul class="cmd-list">
-                <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 퀴즈 이벤트 출제 [개발자]</li>
+                <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 퀴즈 이벤트 출제 [개발자 전용]</li>
                 <li class="cmd-item"><span class="cmd-name">!point [@유저]</span> - 보유 포인트 조회</li>
                 <li class="cmd-item"><span class="cmd-name">!pointlist</span> - 포인트 순위 TOP 10</li>
-                <li class="cmd-item"><span class="cmd-name">!포인트거래 [@유저] [금액]</span> - 송금 [수수료10%]</li>
+                <li class="cmd-item"><span class="cmd-name">!포인트거래 [@유저] [금액]</span> - 포인트 송금 [수수료 10%]</li>
+                <li class="cmd-item"><span class="cmd-name">!로블확인 [닉네임]</span> - 로블록스 유저 정보 조회</li>
                 <li class="cmd-item"><span class="cmd-name">!일일미션상황</span> - 채팅 일일 미션 현황 조회</li>
+                <li class="cmd-item"><span class="cmd-name">!website</span> - 웹사이트 링크 보기</li>
             </ul>
         </div>
 
-        <div class="section">
+        <!-- 세 번째 열: 진행 중인 경매 -->
+        <div class="section" style="flex: 1;">
             <h2>🔨 진행 중인 경매</h2>
             <div id="auction-container">경매 목록을 불러오는 중...</div>
         </div>
@@ -99,7 +137,6 @@
             <label style="font-size: 13px;">받는 유저의 디스코드 ID</label>
             <input type="text" id="modal-target-id" class="modal-input" placeholder="예: 123456789012345678" oninput="onTargetIdInput()">
             
-            <!-- 프로필 카드 영역 -->
             <div id="targetProfileCard" class="target-profile-card">
                 <img id="targetAvatar" src="" alt="Target Avatar">
                 <div class="profile-info">
@@ -107,7 +144,7 @@
                     <span id="targetIdText" class="profile-id">ID: 000000000000</span>
                 </div>
             </div>
-            <div id="idStatusText" style="font-size: 11px; color: #949ba4; margin-top: 4px;">17자리 이상 디스코드 ID 숫자를 입력하세요.</div>
+            <div id="idStatusText" style="font-size: 11px; color: #949ba4; margin-top: 4px;">17자리 디스코드 숫자를 입력하면 프로필을 조회합니다.</div>
 
             <label style="font-size: 13px; margin-top: 12px; display: block;">보낼 포인트 금액</label>
             <input type="number" id="modal-transfer-amount" class="modal-input" min="1" placeholder="송금할 포인트 입력" oninput="validateTransferForm()">
@@ -155,6 +192,7 @@
                 socket.emit('request_user_point', { user_id: currentUser.id });
                 socket.emit('request_user_mission', { user_id: currentUser.id });
                 socket.emit('request_auctions');
+                socket.emit('request_ranking'); // 랭킹 요청 추가
             });
 
         socket.on('update_user_point', (res) => {
@@ -186,6 +224,55 @@
             });
         });
 
+        // 상점 구매 요청 함수
+        function buyItem(itemType) {
+            const itemName = itemType === 'raindrop' ? '레인드롭 소환 (60P)' : '특별 디스코드 역할 (300P)';
+            if (!confirm(`정말 "${itemName}" 상품을 구매하시겠습니까?`)) return;
+
+            fetch('/api/shop/buy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemType })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showToast(data.message);
+                if (data.success) {
+                    socket.emit('request_user_point', { user_id: currentUser.id });
+                    socket.emit('request_ranking');
+                }
+            })
+            .catch(() => showToast('상점 구매 요청 중 오류가 발생했습니다.'));
+        }
+
+        // 실시간 랭킹 데이터 수신 및 렌더링
+        socket.on('update_ranking_data', (rankings) => {
+            const container = document.getElementById('ranking-container');
+            if (!rankings || rankings.length === 0) {
+                container.innerHTML = '<p style="color: #949ba4; text-align: center;">랭킹 데이터가 없습니다.</p>';
+                return;
+            }
+
+            let html = '';
+            const medals = { 0: '🥇', 1: '🥈', 2: '🥉' };
+            rankings.forEach((item, index) => {
+                const badge = medals[index] || `${index + 1}등`;
+                html += `
+                    <div class="ranking-item">
+                        <span class="ranking-rank">${badge}</span>
+                        <span class="ranking-user">유저 ID: ${item.user_id}</span>
+                        <span class="ranking-point">${item.points.toLocaleString()} P</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        });
+
+        // 5초마다 랭킹 데이터 자동 갱신 요청
+        setInterval(() => {
+            socket.emit('request_ranking');
+        }, 5000);
+
         socket.on('update_auctions', (auctions) => {
             const container = document.getElementById('auction-container');
             container.innerHTML = '';
@@ -201,7 +288,7 @@
                 card.innerHTML = `
                     <h3>코드: ${code}</h3>
                     <p><strong>입찰금:</strong> ${auc.point} P</p>
-                    <p><strong>최고 입찰자 ID:</strong> ${auc.user}</p>
+                    <p><strong>최고 입찰자:</strong> <@${auc.user}></p>
                     <div style="display: flex; gap: 5px;">
                         <input type="number" id="bid-${code}" class="bid-input" placeholder="포인트">
                         <button class="btn-bid" onclick="placeBid('${code}')">입찰</button>
@@ -245,7 +332,7 @@
             profileCard.style.display = 'none';
 
             if (targetId.length < 17 || isNaN(targetId)) {
-                statusText.innerText = '디스코드 ID 17자리 이상을 올바르게 입력하세요.';
+                statusText.innerText = '17자리 디스코드 숫자를 올바르게 입력하세요.';
                 statusText.style.color = '#949ba4';
                 validateTransferForm();
                 return;
@@ -281,7 +368,7 @@
                         validateTransferForm();
                     })
                     .catch(() => {
-                        statusText.innerText = '❌ 유저 조회 중 통신 오류';
+                        statusText.innerText = '❌ 유저 조회 중 오류가 발생했습니다.';
                         statusText.style.color = '#f23f43';
                         isTargetValid = false;
                         validateTransferForm();
@@ -357,7 +444,7 @@
                     document.getElementById('modal-target-id').value = '';
                     document.getElementById('modal-transfer-amount').value = '';
                     document.getElementById('targetProfileCard').style.display = 'none';
-                    document.getElementById('idStatusText').innerText = '17자리 이상 디스코드 ID 숫자를 입력하세요.';
+                    document.getElementById('idStatusText').innerText = '17자리 디스코드 숫자를 입력하면 프로필을 조회합니다.';
                     document.getElementById('idStatusText').style.color = '#949ba4';
                     document.getElementById('feeBox').style.display = 'none';
                     socket.emit('request_user_point', { user_id: currentUser.id });
