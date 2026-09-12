@@ -16,14 +16,14 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET || '';
 const CALLBACK_URL = process.env.CALLBACK_URL || 'https://luacn-server-point-bot-deshboard.onrender.com/auth/discord/callback';
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
 
-// 세션 설정 (Render 환경에 맞게 안전하게 설정)
+// 세션 설정
 app.use(session({
     secret: 'luacn-super-secret-key-2026',
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false, // Render는 기본 HTTP 프록시를 쓰므로 false가 안전합니다
-        maxAge: 24 * 60 * 60 * 1000 // 24시간
+        secure: false, 
+        maxAge: 24 * 60 * 60 * 1000 
     }
 }));
 
@@ -31,14 +31,8 @@ app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Passport 직렬화 설정 (에러 방어용)
-passport.serializeUser((user, done) => {
-    done(null, user);
-});
-
-passport.deserializeUser((obj, done) => {
-    done(null, obj);
-});
+passport.serializeUser((user, done) => { done(null, user); });
+passport.deserializeUser((obj, done) => { done(null, obj); });
 
 // 디스코드 OAuth2 전략 설정
 passport.use(new DiscordStrategy({
@@ -47,26 +41,16 @@ passport.use(new DiscordStrategy({
     callbackURL: CALLBACK_URL,
     scope: ['identify']
 }, (accessToken, refreshToken, profile, done) => {
-    try {
-        return done(null, profile);
-    } catch (err) {
-        return done(err, null);
-    }
+    try { return done(null, profile); } 
+    catch (err) { return done(err, null); }
 }));
 
 // 로그인 라우트
 app.get('/auth/discord', passport.authenticate('discord'));
 
-// 콜백 라우트 (여기서 500 에러가 나던 지점입니다)
 app.get('/auth/discord/callback', 
-    passport.authenticate('discord', { 
-        failureRedirect: '/',
-        failureMessage: true 
-    }), 
-    (req, res) => {
-        // 로그인 성공 시 대시보드로 이동
-        res.redirect('/dashboard');
-    }
+    passport.authenticate('discord', { failureRedirect: '/', failureMessage: true }), 
+    (req, res) => { res.redirect('/dashboard'); }
 );
 
 app.get('/logout', (req, res, next) => {
@@ -76,7 +60,6 @@ app.get('/logout', (req, res, next) => {
     });
 });
 
-// 인증 미들웨어
 function checkAuth(req, res, next) {
     if (req.isAuthenticated && req.isAuthenticated()) {
         return next();
@@ -118,7 +101,6 @@ app.get('/api/user', checkAuth, (req, res) => {
             avatar: avatarUrl
         });
     } catch (err) {
-        console.error('API /api/user 에러:', err);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -143,12 +125,26 @@ app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
             avatar: avatarUrl
         });
     } catch (error) {
-        console.error('디스코드 유저 조회 에러:', error.response ? error.response.data : error.message);
         res.json({ success: false, message: '존재하지 않거나 조회할 수 없는 유저 ID입니다.' });
     }
 });
 
+// 상점 구매 API (웹 -> 봇 소켓 통신)
+app.post('/api/shop/buy', checkAuth, (req, res) => {
+    const { itemType } = req.body;
+    const userId = req.user.id;
+
+    if (!botSocket) {
+        return res.json({ success: false, message: '디스코드 봇이 오프라인 상태입니다. 잠시 후 시도해주세요.' });
+    }
+
+    botSocket.emit('process_shop_purchase', { userId, itemType }, (response) => {
+        res.json(response);
+    });
+});
+
 let botSocket = null;
+let latestRankings = [];
 
 io.on('connection', (socket) => {
     socket.on('bot_register', () => {
@@ -180,20 +176,15 @@ io.on('connection', (socket) => {
         io.emit('update_user_mission', data);
     });
 
-    socket.on('request_auctions', () => {
-        if (botSocket) botSocket.emit('get_auctions');
+    // 랭킹 데이터 수신 및 브로드캐스트
+    socket.on('send_ranking_data', (data) => {
+        latestRankings = data;
+        io.emit('update_ranking_data', data);
     });
 
-    socket.on('send_auctions', (data) => {
-        io.emit('update_auctions', data);
-    });
-
-    socket.on('submit_bid', (data) => {
-        if (botSocket) botSocket.emit('process_bid', data);
-    });
-
-    socket.on('bid_result', (data) => {
-        io.emit('bid_response', data);
+    socket.on('request_ranking', () => {
+        if (botSocket) botSocket.emit('request_ranking_data');
+        else socket.emit('update_ranking_data', latestRankings);
     });
 });
 
