@@ -115,30 +115,6 @@ app.get('/api/user', checkAuth, (req, res) => {
     }
 });
 
-// 타 유저 프로필 조회 API
-app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
-    const targetId = req.params.id;
-    try {
-        const response = await axios.get(`https://discord.com/api/v10/users/${targetId}`, {
-            headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` }
-        });
-        const userData = response.data;
-        const avatarUrl = userData.avatar 
-            ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png`
-            : `https://cdn.discordapp.com/embed/avatars/${(userData.discriminator || 0) % 5}.png`;
-
-        res.json({
-            success: true,
-            id: userData.id,
-            username: userData.global_name || userData.username,
-            tag: userData.username,
-            avatar: avatarUrl
-        });
-    } catch (error) {
-        res.json({ success: false, message: '존재하지 않거나 조회할 수 없는 유저 ID입니다.' });
-    }
-});
-
 // 상점 구매 API (웹 -> 봇 소켓 통신)
 app.post('/api/shop/buy', checkAuth, (req, res) => {
     const { itemType } = req.body;
@@ -186,6 +162,21 @@ io.on('connection', (socket) => {
     socket.on('request_ranking', () => {
         if (botSocket) botSocket.emit('request_ranking_data');
         else socket.emit('update_ranking_data', latestRankings);
+    });
+
+    // 서버 멤버 목록 요청 중계
+    socket.on('request_server_members', () => {
+        if (botSocket) {
+            botSocket.emit('get_server_members', {}, (members) => {
+                socket.emit('update_server_members', members);
+            });
+        } else {
+            socket.emit('update_server_members', []);
+        }
+    });
+
+    socket.on('send_server_members', (data) => {
+        io.emit('update_server_members', data);
     });
 });
 
