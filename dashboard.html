@@ -85,9 +85,7 @@
         <!-- 두 번째 열: 서버 멤버 목록 + 실시간 검색 필터 -->
         <div class="section" style="flex: 1.2;">
             <h2>👥 서버 멤버 목록</h2>
-            <!-- 멤버 검색 입력창 -->
             <input type="text" id="member-search-input" class="search-input" placeholder="🔍 멤버 닉네임 검색..." oninput="filterMemberList()">
-            
             <div style="max-height: 235px; overflow-y: auto;">
                 <table class="member-table">
                     <thead>
@@ -110,15 +108,17 @@
         </div>
     </div>
 
-    <!-- 💸 포인트 거래 팝업 모달 -->
+    <!-- 💸 포인트 거래 팝업 모달 (플레이어 검색 선택 방식 적용) -->
     <div id="transferModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:#5865f2;">💸 포인트 송금하기</h3>
             
-            <label style="font-size: 13px;">받을 사람 선택 (서버 멤버)</label>
-            <select id="modal-target-select" class="modal-select" onchange="validateTransferForm()">
-                <option value="">-- 유저를 선택하세요 --</option>
+            <label style="font-size: 13px;">받을 사람 검색 및 선택</label>
+            <input type="text" id="modal-search-input" class="modal-input" placeholder="🔍 닉네임 검색..." oninput="filterModalMembers()">
+            <select id="modal-target-select" class="modal-select" size="4" style="height: 100px;" onchange="selectModalTarget()">
+                <!-- 검색 결과 동적 생성 -->
             </select>
+            <div id="selected-target-display" style="font-size: 12px; color: #57f287; margin-top: 4px;">선택된 유저 없음</div>
 
             <label style="font-size: 13px; margin-top: 12px; display: block;">보낼 포인트 금액</label>
             <input type="number" id="modal-transfer-amount" class="modal-input" min="1" placeholder="송금할 포인트 입력" oninput="validateTransferForm()">
@@ -153,7 +153,8 @@
         const socket = io();
         let currentUser = null;
         let myCurrentPoints = 0;
-        let serverMembers = []; // 서버 멤버 데이터 보관
+        let serverMembers = []; 
+        let selectedTargetId = null;
 
         fetch('/api/user')
             .then(res => res.json())
@@ -176,14 +177,12 @@
             }
         });
 
-        // 서버 멤버 데이터 수신 및 렌더링
         socket.on('update_server_members', (members) => {
             serverMembers = members || [];
             renderMemberList(serverMembers);
-            updateSelectBox(serverMembers);
         });
 
-        // 멤버 리스트 렌더링 함수
+        // 대시보드 멤버 리스트 렌더링
         function renderMemberList(members) {
             const tbody = document.getElementById('server-member-tbody');
             tbody.innerHTML = '';
@@ -198,16 +197,54 @@
                 const isMe = currentUser && m.id === currentUser.id;
                 tr.innerHTML = `
                     <td><img src="${m.avatar}" class="member-avatar">${m.username} ${isMe ? '(나)' : ''}</td>
-                    <td style="color: #949ba4; font-size: 11px;">${isMe ? '접속 중 (본인)' : '멤버'}</td>
+                    <td style="color: #949ba4; font-size: 11px;">${isMe ? '접속 중' : '멤버'}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 모달 드롭다운 업데이트
-        function updateSelectBox(members) {
+        // 대시보드 실시간 멤버 검색 필터
+        function filterMemberList() {
+            const keyword = document.getElementById('member-search-input').value.toLowerCase();
+            const filtered = serverMembers.filter(m => m.username.toLowerCase().includes(keyword));
+            renderMemberList(filtered);
+        }
+
+        // 모달창 열기
+        function openTransferModal() {
+            document.getElementById('transferModal').style.display = 'block';
+            document.getElementById('modal-search-input').value = '';
+            document.getElementById('modal-transfer-amount').value = '';
+            document.getElementById('feeBox').style.display = 'none';
+            selectedTargetId = null;
+            document.getElementById('selected-target-display').innerText = '선택된 유저 없음';
+            updateModalSelectList(serverMembers);
+        }
+
+        function closeTransferModal() { 
+            document.getElementById('transferModal').style.display = 'none'; 
+        }
+
+        // 모달 내 플레이어 검색 필터
+        function filterModalMembers() {
+            const keyword = document.getElementById('modal-search-input').value.toLowerCase();
+            const filtered = serverMembers.filter(m => m.username.toLowerCase().includes(keyword) && (!currentUser || m.id !== currentUser.id));
+            updateModalSelectList(filtered);
+        }
+
+        // 모달 드롭다운 리스트 업데이트
+        function updateModalSelectList(members) {
             const selectBox = document.getElementById('modal-target-select');
-            selectBox.innerHTML = '<option value="">-- 유저를 선택하세요 --</option>';
+            selectBox.innerHTML = '';
+
+            if (members.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = "";
+                opt.textContent = "-- 검색된 유저가 없습니다 --";
+                opt.disabled = true;
+                selectBox.appendChild(opt);
+                return;
+            }
 
             members.forEach(m => {
                 if (currentUser && m.id !== currentUser.id) {
@@ -219,11 +256,16 @@
             });
         }
 
-        // 실시간 멤버 검색 필터 함수
-        function filterMemberList() {
-            const keyword = document.getElementById('member-search-input').value.toLowerCase();
-            const filtered = serverMembers.filter(m => m.username.toLowerCase().includes(keyword));
-            renderMemberList(filtered);
+        // 모달 내 유저 선택
+        function selectModalTarget() {
+            const selectBox = document.getElementById('modal-target-select');
+            selectedTargetId = selectBox.value;
+            const selectedOpt = selectBox.options[selectBox.selectedIndex];
+            
+            if (selectedOpt && selectedTargetId) {
+                document.getElementById('selected-target-display').innerText = `선택됨: ${selectedOpt.textContent}`;
+            }
+            validateTransferForm();
         }
 
         socket.on('update_user_mission', (res) => {
@@ -287,18 +329,14 @@
             if (res.user_id === currentUser.id) showToast(res.message);
         });
 
-        function openTransferModal() { document.getElementById('transferModal').style.display = 'block'; }
-        function closeTransferModal() { document.getElementById('transferModal').style.display = 'none'; }
-
         function validateTransferForm() {
-            const targetId = document.getElementById('modal-target-select').value;
             const amountInput = document.getElementById('modal-transfer-amount');
             const feeBox = document.getElementById('feeBox');
             const modalError = document.getElementById('modalError');
             const btn = document.getElementById('btnSubmitTransfer');
             let amount = parseInt(amountInput.value);
 
-            if (!targetId) {
+            if (!selectedTargetId) {
                 feeBox.style.display = 'none';
                 modalError.style.display = 'none';
                 btn.disabled = true;
@@ -341,12 +379,12 @@
         }
 
         function submitTransfer() {
-            const targetId = document.getElementById('modal-target-select').value;
+            if (!selectedTargetId) return showToast('보낼 유저를 선택하세요.');
             const amount = parseInt(document.getElementById('modal-transfer-amount').value);
 
             socket.emit('submit_transfer', {
                 sender_id: currentUser.id,
-                target_id: targetId,
+                target_id: selectedTargetId,
                 amount: amount
             });
         }
@@ -356,9 +394,6 @@
                 showToast(res.message);
                 if (res.success) {
                     closeTransferModal();
-                    document.getElementById('modal-target-select').value = '';
-                    document.getElementById('modal-transfer-amount').value = '';
-                    document.getElementById('feeBox').style.display = 'none';
                     socket.emit('request_user_point', { user_id: currentUser.id });
                 }
             }
