@@ -166,7 +166,22 @@ io.on('connection', (socket) => {
             botSocket.emit('request_server_members');
         }
     });
+        // 경매 통신 중계 라우팅
+    socket.on('request_auctions', () => { 
+        if (botSocket) botSocket.emit('request_auctions'); 
+    });
 
+    socket.on('update_auctions', (data) => { 
+        io.emit('update_auctions', data); // 웹 브라우저 전체에 경매 현황 전송
+    });
+
+    socket.on('submit_bid', (data) => { 
+        if (botSocket) botSocket.emit('submit_bid', data); 
+    });
+
+    socket.on('bid_response', (data) => { 
+        io.emit('bid_response', data); 
+    });
     socket.on('request_user_point', (data) => {
         if (botSocket) botSocket.emit('get_user_point', data);
     });
