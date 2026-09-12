@@ -15,6 +15,12 @@
         .btn-transfer:hover { background: #1d8a4b; }
         .btn-logout { background: #da373c; color: white; text-decoration: none; padding: 7px 14px; border-radius: 4px; font-size: 13px; font-weight: bold; }
 
+        /* 네비게이션 메뉴바 (다른 사이트처럼 상단/헤더 하단 영역에 페이지 이동 버튼 배치) */
+        .nav-bar { display: flex; gap: 10px; margin-top: 20px; background: #2b2d31; padding: 10px 15px; border-radius: 8px; align-items: center; }
+        .nav-link { background: #313338; color: #f2f3f5; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: background 0.2s; border: 1px solid #3f4147; }
+        .nav-link:hover { background: #3f4147; color: white; border-color: #5865f2; }
+        .nav-link.active { background: #5865f2; color: white; border-color: #5865f2; }
+
         .container { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
         .section { flex: 1; min-width: 320px; background: #2b2d31; padding: 20px; border-radius: 8px; box-sizing: border-box; }
         h2 { border-bottom: 1px solid #3f4147; padding-bottom: 10px; color: #5865f2; margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
@@ -35,23 +41,7 @@
         .bid-input { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; }
         .btn-bid { padding: 8px 15px; background: #5865f2; border: none; color: white; border-radius: 4px; cursor: pointer; }
 
-        /* 상점 및 랭킹 창 오픈 버튼 */
-        .btn-window-open { background: #4f545c; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
-        .btn-window-open:hover { background: #6d6f78; }
-
-        /* 상점 아이템 스타일 */
-        .shop-item { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .shop-info { flex: 1; margin-right: 15px; }
-        .btn-shop { background: #5865f2; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-        .btn-shop:hover { background: #4752c4; }
-
-        /* 랭킹 아이템 스타일 */
-        .ranking-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: #313338; border-radius: 6px; margin-bottom: 8px; }
-        .ranking-rank { font-weight: bold; color: #f0b232; width: 40px; font-size: 15px; }
-        .ranking-user { flex: 1; font-size: 14px; }
-        .ranking-point { font-weight: bold; color: #f0b232; font-size: 15px; }
-
-        /* 모달 공통 스타일 */
+        /* 모달 공통 스타일 (송금 및 커스텀 확인용) */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #2b2d31; margin: 6% auto; padding: 25px; border-radius: 10px; width: 420px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
         .modal-input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; }
@@ -83,22 +73,23 @@
         </div>
     </div>
 
+    <!-- 🌐 다른 사이트처럼 상단 메뉴바 형태의 페이지 이동 탭 -->
+    <div class="nav-bar">
+        <a href="/dashboard" class="nav-link active">🏠 대시보드 홈</a>
+        <a href="/shop" class="nav-link">🛒 포인트 상점</a>
+        <a href="/ranking" class="nav-link">🏆 실시간 랭킹</a>
+    </div>
+
     <div class="container">
-        <!-- 첫 번째 열: 일일 미션 & 상점 바로가기 버튼 카드 -->
+        <!-- 첫 번째 열: 일일 미션 -->
         <div class="section" style="flex: 1.2;">
-            <h2>
-                <span>🎯 오늘의 일일 미션</span>
-                <button class="btn-window-open" onclick="openShopModal()">🛒 포인트 상점 열기</button>
-            </h2>
+            <h2>🎯 오늘의 일일 미션</h2>
             <div id="mission-container">미션 정보를 불러오는 중...</div>
         </div>
 
-        <!-- 두 번째 열: 랭킹 보기 버튼 카드 & 봇 명령어 -->
+        <!-- 두 번째 열: 봇 명령어 목록 -->
         <div class="section" style="flex: 1.2;">
-            <h2>
-                <span>📜 봇 명령어 목록</span>
-                <button class="btn-window-open" onclick="openRankingModal()">🏆 실시간 랭킹 보기</button>
-            </h2>
+            <h2>📜 봇 명령어 목록</h2>
             <ul class="cmd-list" style="margin-top: 15px;">
                 <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 퀴즈 이벤트 출제 [개발자 전용]</li>
                 <li class="cmd-item"><span class="cmd-name">!point [@유저]</span> - 보유 포인트 조회</li>
@@ -114,58 +105,6 @@
         <div class="section" style="flex: 1;">
             <h2>🔨 진행 중인 경매</h2>
             <div id="auction-container">경매 목록을 불러오는 중...</div>
-        </div>
-    </div>
-
-    <!-- 🛒 포인트 상점 독립 팝업 창 (모달) -->
-    <div id="shopModal" class="modal">
-        <div class="modal-content" style="width: 450px;">
-            <h3 style="margin-top:0; color:#5865f2; display:flex; justify-content:space-between; align-items:center;">
-                <span>🛒 포인트 상점</span>
-                <button onclick="closeShopModal()" style="background:none; border:none; color:#949ba4; font-size:18px; cursor:pointer;">✕</button>
-            </h3>
-            <p style="font-size: 13px; color: #949ba4; margin-bottom: 20px;">보유한 포인트로 다양한 특전 상품을 즉시 구매할 수 있습니다.</p>
-            
-            <div class="shop-item">
-                <div class="shop-info">
-                    <div style="font-weight: bold; font-size: 15px;">⚡ 레인드롭 소환</div>
-                    <div style="font-size: 12px; color: #949ba4; margin-top: 2px;">지정된 채팅 채널에 즉시 퀴즈를 발생시킵니다.</div>
-                    <div style="font-size: 12px; color: #f0b232; font-weight: bold; margin-top: 4px;">가격: 60 P</div>
-                </div>
-                <button class="btn-shop" onclick="buyItem('raindrop')">구매</button>
-            </div>
-            
-            <div class="shop-item">
-                <div class="shop-info">
-                    <div style="font-weight: bold; font-size: 15px;">👑 특별 디스코드 역할</div>
-                    <div style="font-size: 12px; color: #949ba4; margin-top: 2px;">서버에서 사용 가능한 전용 역할을 즉시 지급받습니다.</div>
-                    <div style="font-size: 12px; color: #f0b232; font-weight: bold; margin-top: 4px;">가격: 300 P</div>
-                </div>
-                <button class="btn-shop" onclick="buyItem('role')">구매</button>
-            </div>
-
-            <div class="modal-btns" style="margin-top: 20px;">
-                <button onclick="closeShopModal()" style="background:#4e5058; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">닫기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🏆 실시간 랭킹 독립 팝업 창 (모달) -->
-    <div id="rankingModal" class="modal">
-        <div class="modal-content" style="width: 460px;">
-            <h3 style="margin-top:0; color:#5865f2; display:flex; justify-content:space-between; align-items:center;">
-                <span>🏆 실시간 서버 랭킹 (TOP 10)</span>
-                <button onclick="closeRankingModal()" style="background:none; border:none; color:#949ba4; font-size:18px; cursor:pointer;">✕</button>
-            </h3>
-            <p style="font-size: 13px; color: #949ba4; margin-bottom: 15px;">서버 내 포인트 보유량 기준 상위 10명의 실시간 순위입니다.</p>
-            
-            <div id="ranking-container" style="max-height: 380px; overflow-y: auto;">
-                <p style="color: #949ba4; text-align: center; padding: 20px;">랭킹 정보를 불러오는 중...</p>
-            </div>
-
-            <div class="modal-btns" style="margin-top: 20px;">
-                <button onclick="closeRankingModal()" style="background:#4e5058; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">닫기</button>
-            </div>
         </div>
     </div>
 
@@ -232,7 +171,6 @@
                 socket.emit('request_user_point', { user_id: currentUser.id });
                 socket.emit('request_user_mission', { user_id: currentUser.id });
                 socket.emit('request_auctions');
-                socket.emit('request_ranking');
             });
 
         socket.on('update_user_point', (res) => {
@@ -263,69 +201,6 @@
                 container.appendChild(card);
             });
         });
-
-        // 상점 모달 제어 함수
-        function openShopModal() { document.getElementById('shopModal').style.display = 'block'; }
-        function closeShopModal() { document.getElementById('shopModal').style.display = 'none'; }
-
-        // 랭킹 모달 제어 함수
-        function openRankingModal() { 
-            document.getElementById('rankingModal').style.display = 'block'; 
-            socket.emit('request_ranking'); // 창을 열 때 즉시 최신 랭킹 요청
-        }
-        function closeRankingModal() { document.getElementById('rankingModal').style.display = 'none'; }
-
-        // 상점 구매 요청 함수
-        function buyItem(itemType) {
-            const itemName = itemType === 'raindrop' ? '레인드롭 소환 (60P)' : '특별 디스코드 역할 (300P)';
-            if (!confirm(`정말 "${itemName}" 상품을 구매하시겠습니까?`)) return;
-
-            fetch('/api/shop/buy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ itemType })
-            })
-            .then(res => res.json())
-            .then(data => {
-                showToast(data.message);
-                if (data.success) {
-                    closeShopModal();
-                    socket.emit('request_user_point', { user_id: currentUser.id });
-                    socket.emit('request_ranking');
-                }
-            })
-            .catch(() => showToast('상점 구매 요청 중 오류가 발생했습니다.'));
-        }
-
-        // 실시간 랭킹 데이터 수신 및 렌더링
-        socket.on('update_ranking_data', (rankings) => {
-            const container = document.getElementById('ranking-container');
-            if (!rankings || rankings.length === 0) {
-                container.innerHTML = '<p style="color: #949ba4; text-align: center; padding: 20px;">랭킹 데이터가 없습니다.</p>';
-                return;
-            }
-
-            let html = '';
-            const medals = { 0: '🥇', 1: '🥈', 2: '🥉' };
-            rankings.forEach((item, index) => {
-                const badge = medals[index] || `${index + 1}등`;
-                html += `
-                    <div class="ranking-item">
-                        <span class="ranking-rank">${badge}</span>
-                        <span class="ranking-user">유저 ID: ${item.user_id}</span>
-                        <span class="ranking-point">${item.points.toLocaleString()} P</span>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        });
-
-        // 랭킹 창이 열려있을 때 주기적 갱신
-        setInterval(() => {
-            if (document.getElementById('rankingModal').style.display === 'block') {
-                socket.emit('request_ranking');
-            }
-        }, 5000);
 
         socket.on('update_auctions', (auctions) => {
             const container = document.getElementById('auction-container');
