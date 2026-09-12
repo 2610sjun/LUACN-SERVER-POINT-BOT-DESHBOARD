@@ -31,16 +31,13 @@
         .progress-bar-fill { background: #5865f2; height: 100%; width: 0%; transition: width 0.3s; }
         .badge-complete { background: #23a55a; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; }
 
-        .cmd-list { list-style: none; padding: 0; margin: 0; }
-        .cmd-item { margin-bottom: 10px; padding: 8px 12px; background: #313338; border-radius: 6px; }
-        .cmd-name { font-weight: bold; color: #57f287; }
-
         .auction-card { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .bid-input { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; }
         .btn-bid { padding: 8px 15px; background: #5865f2; border: none; color: white; border-radius: 4px; cursor: pointer; }
 
-        /* 서버 멤버 표 스타일 */
-        .member-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        /* 멤버 검색창 및 표 스타일 */
+        .search-input { width: 100%; padding: 8px 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; font-size: 13px; }
+        .member-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .member-table th, .member-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #3f4147; }
         .member-table th { color: #949ba4; font-weight: 600; }
         .member-table tr:hover { background: #313338; }
@@ -85,15 +82,18 @@
             <div id="mission-container">미션 정보를 불러오는 중...</div>
         </div>
 
-        <!-- 두 번째 열: 서버 멤버 목록 (약 15명 고정 표) -->
+        <!-- 두 번째 열: 서버 멤버 목록 + 실시간 검색 필터 -->
         <div class="section" style="flex: 1.2;">
-            <h2>👥 서버 멤버 목록 (1460...)</h2>
-            <div style="max-height: 280px; overflow-y: auto;">
+            <h2>👥 서버 멤버 목록</h2>
+            <!-- 멤버 검색 입력창 -->
+            <input type="text" id="member-search-input" class="search-input" placeholder="🔍 멤버 닉네임 검색..." oninput="filterMemberList()">
+            
+            <div style="max-height: 235px; overflow-y: auto;">
                 <table class="member-table">
                     <thead>
                         <tr>
                             <th>유저</th>
-                            <th>디스코드 ID</th>
+                            <th>상태</th>
                         </tr>
                     </thead>
                     <tbody id="server-member-tbody">
@@ -110,7 +110,7 @@
         </div>
     </div>
 
-    <!-- 💸 포인트 거래 팝업 모달 (드롭다운으로 15명 중 선택) -->
+    <!-- 💸 포인트 거래 팝업 모달 -->
     <div id="transferModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:#5865f2;">💸 포인트 송금하기</h3>
@@ -165,7 +165,7 @@
                 socket.emit('request_user_point', { user_id: currentUser.id });
                 socket.emit('request_user_mission', { user_id: currentUser.id });
                 socket.emit('request_auctions');
-                socket.emit('request_server_members'); // 서버 멤버 리스트 요청
+                socket.emit('request_server_members');
             });
 
         socket.on('update_user_point', (res) => {
@@ -176,38 +176,55 @@
             }
         });
 
-        // 서버 멤버 데이터 수신 (약 15명)
+        // 서버 멤버 데이터 수신 및 렌더링
         socket.on('update_server_members', (members) => {
-            serverMembers = members;
-            const tbody = document.getElementById('server-member-tbody');
-            const selectBox = document.getElementById('modal-target-select');
-            
-            tbody.innerHTML = '';
-            selectBox.innerHTML = '<option value="">-- 유저를 선택하세요 --</option>';
+            serverMembers = members || [];
+            renderMemberList(serverMembers);
+            updateSelectBox(serverMembers);
+        });
 
-            if (!members || members.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" style="color: #949ba4; text-align: center;">멤버가 없습니다.</td></tr>';
+        // 멤버 리스트 렌더링 함수
+        function renderMemberList(members) {
+            const tbody = document.getElementById('server-member-tbody');
+            tbody.innerHTML = '';
+
+            if (members.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="color: #949ba4; text-align: center;">검색된 멤버가 없습니다.</td></tr>';
                 return;
             }
 
             members.forEach(m => {
-                // 표에 추가 (본인 강조 등 처리 가능)
                 const tr = document.createElement('tr');
+                const isMe = currentUser && m.id === currentUser.id;
                 tr.innerHTML = `
-                    <td><img src="${m.avatar}" class="member-avatar">${m.username} ${m.id === currentUser?.id ? '(나)' : ''}</td>
-                    <td style="color: #949ba4; font-size: 11px;">${m.id}</td>
+                    <td><img src="${m.avatar}" class="member-avatar">${m.username} ${isMe ? '(나)' : ''}</td>
+                    <td style="color: #949ba4; font-size: 11px;">${isMe ? '접속 중 (본인)' : '멤버'}</td>
                 `;
                 tbody.appendChild(tr);
+            });
+        }
 
-                // 본인을 제외하고 드롭다운 선택지에 추가
+        // 모달 드롭다운 업데이트
+        function updateSelectBox(members) {
+            const selectBox = document.getElementById('modal-target-select');
+            selectBox.innerHTML = '<option value="">-- 유저를 선택하세요 --</option>';
+
+            members.forEach(m => {
                 if (currentUser && m.id !== currentUser.id) {
                     const opt = document.createElement('option');
                     opt.value = m.id;
-                    opt.textContent = `${m.username} (${m.id})`;
+                    opt.textContent = m.username;
                     selectBox.appendChild(opt);
                 }
             });
-        });
+        }
+
+        // 실시간 멤버 검색 필터 함수
+        function filterMemberList() {
+            const keyword = document.getElementById('member-search-input').value.toLowerCase();
+            const filtered = serverMembers.filter(m => m.username.toLowerCase().includes(keyword));
+            renderMemberList(filtered);
+        }
 
         socket.on('update_user_mission', (res) => {
             if (res.user_id !== currentUser.id) return;
