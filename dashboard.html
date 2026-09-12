@@ -37,8 +37,9 @@
         .cmd-name { font-weight: bold; color: #57f287; }
 
         .auction-card { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .bid-input { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; }
-        .btn-bid { padding: 8px 15px; background: #5865f2; border: none; color: white; border-radius: 4px; cursor: pointer; }
+        .bid-input { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; }
+        .btn-bid { padding: 8px 15px; background: #5865f2; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-bid:hover { background: #4752c4; }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #2b2d31; margin: 6% auto; padding: 25px; border-radius: 10px; width: 420px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
@@ -51,7 +52,6 @@
         .profile-name { font-weight: bold; font-size: 14px; color: #f2f3f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .profile-id { font-size: 11px; color: #949ba4; }
 
-        /* 멤버 검색 드롭다운 스타일 */
         .member-dropdown { position: absolute; width: calc(100% - 50px); max-height: 200px; overflow-y: auto; background: #1e1f22; border: 1px solid #4e5058; border-radius: 4px; z-index: 100; display: none; margin-top: -4px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
         .member-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; transition: background 0.2s; }
         .member-option:hover { background: #35373c; }
@@ -92,13 +92,11 @@
         <div class="section" style="flex: 1.2;">
             <h2>📜 봇 명령어 목록</h2>
             <ul class="cmd-list" style="margin-top: 15px;">
-                <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 퀴즈 이벤트 출제 [개발자 전용]</li>
-                <li class="cmd-item"><span class="cmd-name">!point [@유저]</span> - 보유 포인트 조회</li>
-                <li class="cmd-item"><span class="cmd-name">!pointlist</span> - 포인트 순위 TOP 10</li>
+                <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 레인드롭 퀴즈 수동 출제</li>
+                <li class="cmd-item"><span class="cmd-name">/경매열기</span> - 경매 오픈 (슬래시 명령어)</li>
+                <li class="cmd-item"><span class="cmd-name">!입찰 [상품명] [금액]</span> - 디스코드 채널 경매 입찰</li>
+                <li class="cmd-item"><span class="cmd-name">!경매낙찰 [상품명]</span> - 게시자 본인 경매 종료 및 낙찰</li>
                 <li class="cmd-item"><span class="cmd-name">!포인트거래 [@유저] [금액]</span> - 포인트 송금 [수수료 10%]</li>
-                <li class="cmd-item"><span class="cmd-name">!로블확인 [닉네임]</span> - 로블록스 유저 정보 조회</li>
-                <li class="cmd-item"><span class="cmd-name">!일일미션상황</span> - 채팅 일일 미션 현황 조회</li>
-                <li class="cmd-item"><span class="cmd-name">!website</span> - 웹사이트 링크 보기</li>
             </ul>
         </div>
 
@@ -222,16 +220,25 @@
             }
             keys.forEach(code => {
                 const auc = auctions[code];
+                const bidderName = auc.highest_bidder_name || '입찰자 없음';
+                const isOwner = currentUser && (currentUser.id === String(auc.user));
+
                 const card = document.createElement('div');
                 card.className = 'auction-card';
                 card.innerHTML = `
-                    <h3>코드: ${code}</h3>
-                    <p><strong>입찰금:</strong> ${auc.point} P</p>
-                    <p><strong>최고 입찰자:</strong> <@${auc.user}></p>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="number" id="bid-${code}" class="bid-input" placeholder="포인트">
-                        <button class="btn-bid" onclick="placeBid('${code}')">입찰</button>
-                    </div>
+                    <h3 style="margin-top:0; color:#f0b232;">상품: ${code}</h3>
+                    <p><strong>현재 최고가:</strong> ${auc.point.toLocaleString()} P</p>
+                    <p style="font-size:13px; color:#57f287;"><strong>최고 입찰자:</strong> ${bidderName}</p>
+                    <p style="font-size:11px; color:#949ba4;">게시자 ID: &lt;@${auc.user}&gt;</p>
+                    
+                    ${isOwner ? `
+                        <button class="btn-transfer" style="background:#da373c; width:100%; margin-top:8px;" onclick="closeAuction('${code}')">🏆 경매 낙찰 (종료하기)</button>
+                    ` : `
+                        <div style="display: flex; gap: 5px; margin-top: 8px;">
+                            <input type="number" id="bid-${code}" class="bid-input" placeholder="입찰 포인트">
+                            <button class="btn-bid" onclick="placeBid('${code}')">입찰</button>
+                        </div>
+                    `}
                 `;
                 container.appendChild(card);
             });
@@ -248,8 +255,21 @@
             });
         }
 
+        function closeAuction(code) {
+            if (!confirm(`[${code}] 경매를 낙찰 처리하시겠습니까?`)) return;
+            socket.emit('close_auction', {
+                code: code,
+                user_id: currentUser.id
+            });
+        }
+
         socket.on('bid_response', (res) => {
-            if (res.user_id === currentUser.id) showToast(res.message);
+            showToast(res.message);
+        });
+
+        socket.on('auction_closed_response', (res) => {
+            showToast(res.message);
+            socket.emit('request_user_point', { user_id: currentUser.id });
         });
 
         function openTransferModal() { 
@@ -261,18 +281,14 @@
             document.getElementById('memberDropdown').style.display = 'none';
         }
 
-        // 서버 멤버 실시간 검색 (검색어 없을 때도 기본 15명, 유사한 최대 15명 표시)
         function onMemberSearchInput() {
             const keyword = document.getElementById('modal-target-search').value.toLowerCase().trim();
             const dropdown = document.getElementById('memberDropdown');
             
-            // 본인 제외 필터링
             let filtered = serverMembers.filter(m => m.id !== currentUser.id);
             if (keyword !== "") {
                 filtered = filtered.filter(m => m.username.toLowerCase().includes(keyword));
             }
-            
-            // 최대 15개 제한
             filtered = filtered.slice(0, 15);
 
             if (filtered.length === 0) {
@@ -310,7 +326,6 @@
             validateTransferForm();
         }
 
-        // 바깥 영역 클릭 시 드롭다운 닫기
         window.addEventListener('click', function(e) {
             if (!document.getElementById('modal-target-search').contains(e.target) && !document.getElementById('memberDropdown').contains(e.target)) {
                 document.getElementById('memberDropdown').style.display = 'none';
