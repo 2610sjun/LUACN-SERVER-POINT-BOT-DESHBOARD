@@ -28,7 +28,7 @@
         .badge-complete { background: #23a55a; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; }
 
         .cmd-list { list-style: none; padding: 0; margin: 0; }
-        .cmd-item { margin-bottom: 10px; padding: 8px 12px; background: #313338; border-radius: 6px; }
+        .cmd-item { margin-bottom: 10px; padding: 8px 12px; background: #313338; border-radius: 6px; font-size: 13px; }
         .cmd-name { font-weight: bold; color: #57f287; }
 
         .auction-card { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
@@ -52,7 +52,6 @@
         .fee-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .error-text { color: #f23f43; font-size: 12px; margin-top: 4px; display: none; }
         
-        /* 커스텀 토스트 알림 UI */
         #toast-alert { display: none; position: fixed; bottom: 20px; right: 20px; background: #23a55a; color: white; padding: 12px 20px; border-radius: 6px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.3s; }
     </style>
 </head>
@@ -78,14 +77,11 @@
         <div class="section">
             <h2>📜 봇 명령어 목록</h2>
             <ul class="cmd-list">
-                <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 퀴즈 이벤트 출제 [개발자 전용]</li>
+                <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 퀴즈 이벤트 출제 [개발자]</li>
                 <li class="cmd-item"><span class="cmd-name">!point [@유저]</span> - 보유 포인트 조회</li>
                 <li class="cmd-item"><span class="cmd-name">!pointlist</span> - 포인트 순위 TOP 10</li>
-                <li class="cmd-item"><span class="cmd-name">!포인트거래 [@유저] [금액]</span> - 포인트 송금 [수수료 10%]</li>
-                <li class="cmd-item"><span class="cmd-name">!로블확인 [닉네임]</span> - 로블록스 유저 정보 조회</li>
+                <li class="cmd-item"><span class="cmd-name">!포인트거래 [@유저] [금액]</span> - 송금 [수수료10%]</li>
                 <li class="cmd-item"><span class="cmd-name">!일일미션상황</span> - 채팅 일일 미션 현황 조회</li>
-                <li class="cmd-item"><span class="cmd-name">/경매열기 [가격] [물품] [게시자ID]</span> - 경매 등록 [관리자 전용]</li>
-                <li class="cmd-item"><span class="cmd-name">!website</span> - 웹사이트 링크 보기</li>
             </ul>
         </div>
 
@@ -95,7 +91,7 @@
         </div>
     </div>
 
-    <!-- 💸 포인트 거래 팝업 모달 (디스코드 프로필 연동) -->
+    <!-- 💸 포인트 거래 팝업 모달 -->
     <div id="transferModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:#5865f2;">💸 포인트 송금하기</h3>
@@ -103,7 +99,7 @@
             <label style="font-size: 13px;">받는 유저의 디스코드 ID</label>
             <input type="text" id="modal-target-id" class="modal-input" placeholder="예: 123456789012345678" oninput="onTargetIdInput()">
             
-            <!-- 받는 사람 디스코드 프로필 카드 영역 -->
+            <!-- 프로필 카드 영역 -->
             <div id="targetProfileCard" class="target-profile-card">
                 <img id="targetAvatar" src="" alt="Target Avatar">
                 <div class="profile-info">
@@ -111,7 +107,7 @@
                     <span id="targetIdText" class="profile-id">ID: 000000000000</span>
                 </div>
             </div>
-            <div id="idStatusText" style="font-size: 11px; color: #949ba4; margin-top: 4px;">17자리 디스코드 숫자를 입력하면 프로필을 조회합니다.</div>
+            <div id="idStatusText" style="font-size: 11px; color: #949ba4; margin-top: 4px;">17자리 이상 디스코드 ID 숫자를 입력하세요.</div>
 
             <label style="font-size: 13px; margin-top: 12px; display: block;">보낼 포인트 금액</label>
             <input type="number" id="modal-transfer-amount" class="modal-input" min="1" placeholder="송금할 포인트 입력" oninput="validateTransferForm()">
@@ -205,7 +201,7 @@
                 card.innerHTML = `
                     <h3>코드: ${code}</h3>
                     <p><strong>입찰금:</strong> ${auc.point} P</p>
-                    <p><strong>최고 입찰자:</strong> <@${auc.user}></p>
+                    <p><strong>최고 입찰자 ID:</strong> ${auc.user}</p>
                     <div style="display: flex; gap: 5px;">
                         <input type="number" id="bid-${code}" class="bid-input" placeholder="포인트">
                         <button class="btn-bid" onclick="placeBid('${code}')">입찰</button>
@@ -238,7 +234,6 @@
             document.getElementById('transferModal').style.display = 'none';
         }
 
-        // 유저 ID 입력 시 실시간 프로필 조회 타이머 처리
         let searchTimeout = null;
         function onTargetIdInput() {
             clearTimeout(searchTimeout);
@@ -250,7 +245,7 @@
             profileCard.style.display = 'none';
 
             if (targetId.length < 17 || isNaN(targetId)) {
-                statusText.innerText = '17자리 디스코드 숫자를 올바르게 입력하세요.';
+                statusText.innerText = '디스코드 ID 17자리 이상을 올바르게 입력하세요.';
                 statusText.style.color = '#949ba4';
                 validateTransferForm();
                 return;
@@ -286,7 +281,7 @@
                         validateTransferForm();
                     })
                     .catch(() => {
-                        statusText.innerText = '❌ 유저 조회 중 오류가 발생했습니다.';
+                        statusText.innerText = '❌ 유저 조회 중 통신 오류';
                         statusText.style.color = '#f23f43';
                         isTargetValid = false;
                         validateTransferForm();
@@ -294,7 +289,6 @@
             }, 400);
         }
 
-        // 폼 유효성 검사 및 수수료 계산
         function validateTransferForm() {
             const amountInput = document.getElementById('modal-transfer-amount');
             const feeBox = document.getElementById('feeBox');
@@ -331,7 +325,6 @@
                 modalError.style.display = 'none';
             }
 
-            // 수수료 (10%) 계산
             let actualReceive = Math.floor(amount * 0.9);
             let fee = amount - actualReceive;
 
@@ -348,9 +341,7 @@
         function submitTransfer() {
             const targetId = document.getElementById('modal-target-id').value.trim();
             const amount = parseInt(document.getElementById('modal-transfer-amount').value);
-            const targetName = document.getElementById('targetUsername').innerText;
 
-            // 브라우저 기본 알림 대신 모달 안이나 이쁜 UI로 재확인 가능하지만 직관적 진행을 위해 전송
             socket.emit('submit_transfer', {
                 sender_id: currentUser.id,
                 target_id: targetId,
@@ -366,7 +357,7 @@
                     document.getElementById('modal-target-id').value = '';
                     document.getElementById('modal-transfer-amount').value = '';
                     document.getElementById('targetProfileCard').style.display = 'none';
-                    document.getElementById('idStatusText').innerText = '17자리 디스코드 숫자를 입력하면 프로필을 조회합니다.';
+                    document.getElementById('idStatusText').innerText = '17자리 이상 디스코드 ID 숫자를 입력하세요.';
                     document.getElementById('idStatusText').style.color = '#949ba4';
                     document.getElementById('feeBox').style.display = 'none';
                     socket.emit('request_user_point', { user_id: currentUser.id });
@@ -374,7 +365,6 @@
             }
         });
 
-        // UI 토스트 알림창 함수
         function showToast(message) {
             const toast = document.getElementById('toast-alert');
             toast.innerText = message;
