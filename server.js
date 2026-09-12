@@ -67,7 +67,7 @@ function checkAuth(req, res, next) {
     res.redirect('/');
 }
 
-// 메인 페이지
+// 메인 페이지 (로그인 버튼)
 app.get('/', (req, res) => {
     if (req.isAuthenticated && req.isAuthenticated()) {
         return res.redirect('/dashboard');
@@ -82,17 +82,17 @@ app.get('/', (req, res) => {
     `);
 });
 
-// 대시보드 페이지 라우트
+// 대시보드 HTML 파일 제공
 app.get('/dashboard', checkAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'dashboard_2.html'));
 });
 
-// 포인트 상점 페이지 라우트
+// 🛒 포인트 상점 페이지 라우트 추가
 app.get('/shop', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'shop.html'));
 });
 
-// 실시간 랭킹 페이지 라우트
+// 🏆 실시간 랭킹 페이지 라우트 추가
 app.get('/ranking', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'ranking.html'));
 });
@@ -115,7 +115,7 @@ app.get('/api/user', checkAuth, (req, res) => {
     }
 });
 
-// 타 유저 프로필 조회 API
+// 타 유저 프로필 조회 API (기존 유지용)
 app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
     const targetId = req.params.id;
     try {
@@ -153,13 +153,18 @@ app.post('/api/shop/buy', checkAuth, (req, res) => {
     });
 });
 
+
 let botSocket = null;
 let latestRankings = [];
+let cachedServerMembers = [];
 
 io.on('connection', (socket) => {
     socket.on('bot_register', () => {
         botSocket = socket;
         console.log('🤖 디스코드 봇 소켓 연결됨');
+        if (botSocket) {
+            botSocket.emit('request_server_members');
+        }
     });
 
     socket.on('request_user_point', (data) => {
@@ -178,6 +183,34 @@ io.on('connection', (socket) => {
         io.emit('transfer_response', data);
     });
 
+    socket.on('request_user_mission', (data) => {
+        if (botSocket) botSocket.emit('get_user_mission', data);
+    });
+
+    socket.on('send_user_mission', (data) => {
+        io.emit('update_user_mission', data);
+    });
+
+    // 서버 멤버 목록 처리
+    socket.on('request_server_members', () => {
+        if (botSocket) {
+            botSocket.emit('request_server_members');
+        }
+    });
+
+    socket.on('send_server_members', (data) => {
+        cachedServerMembers = data;
+        io.emit('update_server_members', data);
+    });
+
+    socket.on('get_cached_members', () => {
+        socket.emit('update_server_members', cachedServerMembers);
+        if (botSocket) {
+            botSocket.emit('request_server_members');
+        }
+    });
+
+    // 랭킹 데이터 수신 및 브로드캐스트
     socket.on('send_ranking_data', (data) => {
         latestRankings = data;
         io.emit('update_ranking_data', data);
@@ -186,21 +219,6 @@ io.on('connection', (socket) => {
     socket.on('request_ranking', () => {
         if (botSocket) botSocket.emit('request_ranking_data');
         else socket.emit('update_ranking_data', latestRankings);
-    });
-
-    // ── [필수 추가] 웹에서 요청한 서버 멤버 목록을 디스코드 봇에게 전달하고 받아오는 중계 로직 ──
-    socket.on('request_server_members', () => {
-        if (botSocket) {
-            botSocket.emit('get_server_members', {}, (members) => {
-                socket.emit('update_server_members', members);
-            });
-        } else {
-            socket.emit('update_server_members', []);
-        }
-    });
-
-    socket.on('send_server_members', (data) => {
-        io.emit('update_server_members', data);
     });
 });
 
