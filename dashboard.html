@@ -35,14 +35,25 @@
         .bid-input { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; }
         .btn-bid { padding: 8px 15px; background: #5865f2; border: none; color: white; border-radius: 4px; cursor: pointer; }
 
+        /* 모달 스타일 */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
-        .modal-content { background-color: #2b2d31; margin: 10% auto; padding: 25px; border-radius: 8px; width: 340px; color: white; }
+        .modal-content { background-color: #2b2d31; margin: 8% auto; padding: 25px; border-radius: 10px; width: 380px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
         .modal-input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; }
         .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+
+        /* 디스코드 프로필 카드 스타일 */
+        .target-profile-card { display: flex; align-items: center; background: #1e1f22; border: 1px solid #3f4147; padding: 10px; border-radius: 6px; margin-top: 8px; gap: 12px; display: none; }
+        .target-profile-card img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #5865f2; }
+        .profile-info { display: flex; flex-direction: column; overflow: hidden; }
+        .profile-name { font-weight: bold; font-size: 14px; color: #f2f3f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-id { font-size: 11px; color: #949ba4; }
 
         .fee-card { background: #1e1f22; border: 1px solid #3f4147; padding: 10px; border-radius: 6px; font-size: 12px; margin-top: 10px; }
         .fee-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .error-text { color: #f23f43; font-size: 12px; margin-top: 4px; display: none; }
+        
+        /* 커스텀 토스트 알림 UI */
+        #toast-alert { display: none; position: fixed; bottom: 20px; right: 20px; background: #23a55a; color: white; padding: 12px 20px; border-radius: 6px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.3s; }
     </style>
 </head>
 <body>
@@ -84,16 +95,26 @@
         </div>
     </div>
 
-    <!-- 💸 포인트 거래 팝업 모달 -->
+    <!-- 💸 포인트 거래 팝업 모달 (디스코드 프로필 연동) -->
     <div id="transferModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:#5865f2;">💸 포인트 송금하기</h3>
             
             <label style="font-size: 13px;">받는 유저의 디스코드 ID</label>
-            <input type="text" id="modal-target-id" class="modal-input" placeholder="예: 123456789012345678" oninput="validateAndCalculateFee()">
+            <input type="text" id="modal-target-id" class="modal-input" placeholder="예: 123456789012345678" oninput="onTargetIdInput()">
             
-            <label style="font-size: 13px; margin-top: 10px; display: block;">보낼 포인트 금액</label>
-            <input type="number" id="modal-transfer-amount" class="modal-input" min="1" placeholder="송금할 포인트 입력" oninput="validateAndCalculateFee()">
+            <!-- 받는 사람 디스코드 프로필 카드 영역 -->
+            <div id="targetProfileCard" class="target-profile-card">
+                <img id="targetAvatar" src="" alt="Target Avatar">
+                <div class="profile-info">
+                    <span id="targetUsername" class="profile-name">유저 이름</span>
+                    <span id="targetIdText" class="profile-id">ID: 000000000000</span>
+                </div>
+            </div>
+            <div id="idStatusText" style="font-size: 11px; color: #949ba4; margin-top: 4px;">17자리 디스코드 숫자를 입력하면 프로필을 조회합니다.</div>
+
+            <label style="font-size: 13px; margin-top: 12px; display: block;">보낼 포인트 금액</label>
+            <input type="number" id="modal-transfer-amount" class="modal-input" min="1" placeholder="송금할 포인트 입력" oninput="validateTransferForm()">
             
             <div id="modalError" class="error-text">❌ 잔액이 부족합니다.</div>
 
@@ -114,15 +135,19 @@
 
             <div class="modal-btns">
                 <button onclick="closeTransferModal()" style="background:#4e5058; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">취소</button>
-                <button id="btnSubmitTransfer" onclick="submitTransfer()" disabled style="background:#4e5058; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">1P 이상 입력하세요</button>
+                <button id="btnSubmitTransfer" onclick="submitTransfer()" disabled style="background:#4e5058; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">정보 입력 필요</button>
             </div>
         </div>
     </div>
+
+    <!-- UI 토스트 알림창 -->
+    <div id="toast-alert">알림 메시지</div>
 
     <script>
         const socket = io();
         let currentUser = null;
         let myCurrentPoints = 0;
+        let isTargetValid = false;
 
         fetch('/api/user')
             .then(res => res.json())
@@ -140,7 +165,7 @@
             if (res.user_id === currentUser.id) {
                 myCurrentPoints = res.point;
                 document.getElementById('my-point').innerText = myCurrentPoints.toLocaleString();
-                validateAndCalculateFee();
+                validateTransferForm();
             }
         });
 
@@ -192,7 +217,7 @@
 
         function placeBid(code) {
             const amount = document.getElementById(`bid-${code}`).value;
-            if (!amount || amount <= 0) return alert('금액을 입력하세요.');
+            if (!amount || amount <= 0) return showToast('금액을 올바르게 입력하세요.');
             socket.emit('submit_bid', {
                 code: code,
                 bid_amount: parseInt(amount),
@@ -202,7 +227,7 @@
         }
 
         socket.on('bid_response', (res) => {
-            if (res.user_id === currentUser.id) alert(res.message);
+            if (res.user_id === currentUser.id) showToast(res.message);
         });
 
         function openTransferModal() {
@@ -213,36 +238,79 @@
             document.getElementById('transferModal').style.display = 'none';
         }
 
-        // 입력값 검증 및 수수료 계산
-        function validateAndCalculateFee() {
+        // 유저 ID 입력 시 실시간 프로필 조회 타이머 처리
+        let searchTimeout = null;
+        function onTargetIdInput() {
+            clearTimeout(searchTimeout);
             const targetId = document.getElementById('modal-target-id').value.trim();
+            const profileCard = document.getElementById('targetProfileCard');
+            const statusText = document.getElementById('idStatusText');
+
+            isTargetValid = false;
+            profileCard.style.display = 'none';
+
+            if (targetId.length < 17 || isNaN(targetId)) {
+                statusText.innerText = '17자리 디스코드 숫자를 올바르게 입력하세요.';
+                statusText.style.color = '#949ba4';
+                validateTransferForm();
+                return;
+            }
+
+            if (currentUser && targetId === currentUser.id) {
+                statusText.innerText = '⚠️ 본인에게는 송금할 수 없습니다.';
+                statusText.style.color = '#f23f43';
+                validateTransferForm();
+                return;
+            }
+
+            statusText.innerText = '🔍 디스코드 유저 프로필 조회 중...';
+            statusText.style.color = '#f0b232';
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/discord-user/${targetId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('targetAvatar').src = data.avatar;
+                            document.getElementById('targetUsername').innerText = data.username;
+                            document.getElementById('targetIdText').innerText = `ID: ${data.id}`;
+                            profileCard.style.display = 'flex';
+                            statusText.innerText = '✅ 유저 확인 완료';
+                            statusText.style.color = '#23a55a';
+                            isTargetValid = true;
+                        } else {
+                            statusText.innerText = '❌ 존재하지 않거나 찾을 수 없는 유저 ID입니다.';
+                            statusText.style.color = '#f23f43';
+                            isTargetValid = false;
+                        }
+                        validateTransferForm();
+                    })
+                    .catch(() => {
+                        statusText.innerText = '❌ 유저 조회 중 오류가 발생했습니다.';
+                        statusText.style.color = '#f23f43';
+                        isTargetValid = false;
+                        validateTransferForm();
+                    });
+            }, 400);
+        }
+
+        // 폼 유효성 검사 및 수수료 계산
+        function validateTransferForm() {
             const amountInput = document.getElementById('modal-transfer-amount');
             const feeBox = document.getElementById('feeBox');
             const modalError = document.getElementById('modalError');
             const btn = document.getElementById('btnSubmitTransfer');
             let amount = parseInt(amountInput.value);
 
-            // 1. 유저 ID 체크 (대략 17자리 이상 숫자)
-            if (targetId.length < 17 || isNaN(targetId)) {
+            if (!isTargetValid) {
                 feeBox.style.display = 'none';
                 modalError.style.display = 'none';
                 btn.disabled = true;
-                btn.innerText = '유저 ID 입력 필요';
+                btn.innerText = '유저 프로필 확인 필요';
                 btn.style.background = '#4e5058';
                 return;
             }
 
-            // 2. 본인에게 송금 차단
-            if (currentUser && targetId === currentUser.id) {
-                feeBox.style.display = 'none';
-                modalError.style.display = 'none';
-                btn.disabled = true;
-                btn.innerText = '본인에게는 송금 불가';
-                btn.style.background = '#4e5058';
-                return;
-            }
-
-            // 3. 금액 체크
             if (isNaN(amount) || amount <= 0) {
                 feeBox.style.display = 'none';
                 modalError.style.display = 'none';
@@ -252,7 +320,6 @@
                 return;
             }
 
-            // 4. 잔액 초과 체크
             if (amount > myCurrentPoints) {
                 feeBox.style.display = 'none';
                 modalError.style.display = 'block';
@@ -265,7 +332,7 @@
             }
 
             // 수수료 (10%) 계산
-            let actualReceive = amount <= 1 ? 0 : Math.floor(amount * 0.9);
+            let actualReceive = Math.floor(amount * 0.9);
             let fee = amount - actualReceive;
 
             document.getElementById('sendAmountText').innerText = `${amount.toLocaleString()} P`;
@@ -273,7 +340,6 @@
             document.getElementById('receiveAmountText').innerText = `${actualReceive.toLocaleString()} P`;
             feeBox.style.display = 'block';
 
-            // 모든 조건 통과 시 버튼 활성화
             btn.disabled = false;
             btn.innerText = '송금하기';
             btn.style.background = '#23a55a';
@@ -282,28 +348,43 @@
         function submitTransfer() {
             const targetId = document.getElementById('modal-target-id').value.trim();
             const amount = parseInt(document.getElementById('modal-transfer-amount').value);
+            const targetName = document.getElementById('targetUsername').innerText;
 
-            if (confirm(`정말 ${amount.toLocaleString()} P를 송금하시겠습니까?`)) {
-                socket.emit('submit_transfer', {
-                    sender_id: currentUser.id,
-                    target_id: targetId,
-                    amount: amount
-                });
-            }
+            // 브라우저 기본 알림 대신 모달 안이나 이쁜 UI로 재확인 가능하지만 직관적 진행을 위해 전송
+            socket.emit('submit_transfer', {
+                sender_id: currentUser.id,
+                target_id: targetId,
+                amount: amount
+            });
         }
 
         socket.on('transfer_response', (res) => {
             if (res.user_id === currentUser.id) {
-                alert(res.message);
+                showToast(res.message);
                 if (res.success) {
                     closeTransferModal();
                     document.getElementById('modal-target-id').value = '';
                     document.getElementById('modal-transfer-amount').value = '';
+                    document.getElementById('targetProfileCard').style.display = 'none';
+                    document.getElementById('idStatusText').innerText = '17자리 디스코드 숫자를 입력하면 프로필을 조회합니다.';
+                    document.getElementById('idStatusText').style.color = '#949ba4';
                     document.getElementById('feeBox').style.display = 'none';
                     socket.emit('request_user_point', { user_id: currentUser.id });
                 }
             }
         });
+
+        // UI 토스트 알림창 함수
+        function showToast(message) {
+            const toast = document.getElementById('toast-alert');
+            toast.innerText = message;
+            toast.style.display = 'block';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
