@@ -166,6 +166,13 @@ io.on('connection', (socket) => {
             botSocket.emit('request_server_members');
         }
     });
+        // server.js 내부에 추가(또는 확인)해야 할 경매 낙찰 중계 코드
+    socket.on('close_auction', (data) => { 
+        if (botSocket) botSocket.emit('close_auction', data); 
+    });
+    socket.on('auction_closed_response', (data) => { 
+        io.emit('auction_closed_response', data); 
+    });
         // 경매 통신 중계 라우팅
     socket.on('request_auctions', () => { 
         if (botSocket) botSocket.emit('request_auctions'); 
