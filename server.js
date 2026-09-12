@@ -84,7 +84,7 @@ app.get('/', (req, res) => {
 
 // 대시보드 HTML 파일 제공
 app.get('/dashboard', checkAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard_2.html'));
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 // 🛒 포인트 상점 페이지 라우트 추가
