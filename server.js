@@ -11,14 +11,14 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-const CLIENT_ID = process.env.CLIENT_ID || '디스코드_클라이언트_ID';
-const CLIENT_SECRET = process.env.CLIENT_SECRET || '디스코드_클라이언트_시크릿';
-const CALLBACK_URL = process.env.CALLBACK_URL || 'https://your-app.onrender.com/auth/discord/callback';
-const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '당신의_디스코드_봇_토큰';
+const CLIENT_ID = process.env.CLIENT_ID || '';
+const CLIENT_SECRET = process.env.CLIENT_SECRET || '';
+const CALLBACK_URL = process.env.CALLBACK_URL || 'https://luacn-server-point-bot-deshboard.onrender.com/auth/discord/callback';
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
 
 app.use(express.json());
 app.use(session({
-    secret: 'secret-key-1234',
+    secret: 'luacn-secret-key-9999',
     resave: false,
     saveUninitialized: false
 }));
@@ -58,7 +58,7 @@ app.get('/', (req, res) => {
     if (req.isAuthenticated()) return res.redirect('/dashboard');
     res.send(`
         <div style="text-align:center; margin-top: 100px; font-family: sans-serif; background-color: #1e1f22; color: white; height: 100vh; padding-top: 50px;">
-            <h1>🤖 디스코드 봇 대시보드</h1>
+            <h1>🤖 루칸 포인트 대시보드</h1>
             <p>서비스를 이용하시려면 디스코드 로그인이 필요합니다.</p>
             <br>
             <a href="/auth/discord" style="background:#5865F2; color:white; padding:12px 24px; text-decoration:none; border-radius:5px; font-weight:bold;">Discord로 로그인</a>
@@ -74,11 +74,13 @@ app.get('/api/user', checkAuth, (req, res) => {
     res.json({
         id: req.user.id,
         username: req.user.username,
-        avatar: `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png`
+        avatar: req.user.avatar 
+            ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png`
+            : `https://cdn.discordapp.com/embed/avatars/0.png`
     });
 });
 
-// 📌 디스코드 ID로 유저 프로필 정보를 가져오는 API (상세 에러 로그 추가됨)
+// 디스코드 ID로 유저 프로필 조회 API
 app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
     const targetId = req.params.id;
     try {
@@ -88,7 +90,7 @@ app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
         const userData = response.data;
         const avatarUrl = userData.avatar 
             ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png`
-            : `https://cdn.discordapp.com/embed/avatars/${userData.discriminator % 5}.png`;
+            : `https://cdn.discordapp.com/embed/avatars/${(userData.discriminator || 0) % 5}.png`;
 
         res.json({
             success: true,
@@ -98,8 +100,7 @@ app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
             avatar: avatarUrl
         });
     } catch (error) {
-        // 🔥 어떤 에러 때문에 실패했는지 Render 콘솔에 정확하게 출력합니다.
-        console.error('디스코드 유저 조회 에러 상세:', error.response ? error.response.data : error.message);
+        console.error('디스코드 유저 조회 에러:', error.response ? error.response.data : error.message);
         res.json({ success: false, message: '존재하지 않거나 조회할 수 없는 유저 ID입니다.' });
     }
 });
