@@ -16,7 +16,8 @@
         .btn-logout { background: #da373c; color: white; text-decoration: none; padding: 7px 14px; border-radius: 4px; font-size: 13px; font-weight: bold; }
 
         .nav-bar { display: flex; gap: 10px; margin-top: 20px; background: #2b2d31; padding: 10px 15px; border-radius: 8px; align-items: center; }
-        .nav-link { background: #313338; color: #f2f3f5; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 6px; border: 1px solid #3f4147; }
+        .nav-link { background: #313338; color: #f2f3f5; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: background 0.2s; border: 1px solid #3f4147; }
+        .nav-link:hover { background: #3f4147; color: white; border-color: #5865f2; }
         .nav-link.active { background: #5865f2; color: white; border-color: #5865f2; }
 
         .container { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
@@ -31,29 +32,36 @@
         .progress-bar-fill { background: #5865f2; height: 100%; width: 0%; transition: width 0.3s; }
         .badge-complete { background: #23a55a; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; }
 
+        .cmd-list { list-style: none; padding: 0; margin: 0; }
+        .cmd-item { margin-bottom: 10px; padding: 8px 12px; background: #313338; border-radius: 6px; }
+        .cmd-name { font-weight: bold; color: #57f287; }
+
         .auction-card { background: #313338; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .bid-input { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; }
         .btn-bid { padding: 8px 15px; background: #5865f2; border: none; color: white; border-radius: 4px; cursor: pointer; }
 
-        /* 멤버 검색창 및 표 스타일 */
-        .search-input { width: 100%; padding: 8px 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; font-size: 13px; }
-        .member-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .member-table th, .member-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #3f4147; }
-        .member-table th { color: #949ba4; font-weight: 600; }
-        .member-table tr:hover { background: #313338; }
-        .member-avatar { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 6px; }
-
-        /* 모달 스타일 */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
-        .modal-content { background-color: #2b2d31; margin: 6% auto; padding: 25px; border-radius: 10px; width: 440px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-        .modal-input, .modal-select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; }
+        .modal-content { background-color: #2b2d31; margin: 6% auto; padding: 25px; border-radius: 10px; width: 420px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .modal-input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 4px; border: 1px solid #4e5058; background: #1e1f22; color: white; box-sizing: border-box; }
         .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+
+        .target-profile-card { display: flex; align-items: center; background: #1e1f22; border: 1px solid #3f4147; padding: 10px; border-radius: 6px; margin-top: 8px; display: none; gap: 12px; }
+        .target-profile-card img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #5865f2; }
+        .profile-info { display: flex; flex-direction: column; overflow: hidden; }
+        .profile-name { font-weight: bold; font-size: 14px; color: #f2f3f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-id { font-size: 11px; color: #949ba4; }
+
+        /* 멤버 검색 드롭다운 스타일 */
+        .member-dropdown { position: absolute; width: calc(100% - 50px); max-height: 200px; overflow-y: auto; background: #1e1f22; border: 1px solid #4e5058; border-radius: 4px; z-index: 100; display: none; margin-top: -4px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        .member-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; transition: background 0.2s; }
+        .member-option:hover { background: #35373c; }
+        .member-option img { width: 28px; height: 28px; border-radius: 50%; }
 
         .fee-card { background: #1e1f22; border: 1px solid #3f4147; padding: 10px; border-radius: 6px; font-size: 12px; margin-top: 10px; }
         .fee-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .error-text { color: #f23f43; font-size: 12px; margin-top: 4px; display: none; }
         
-        #toast-alert { display: none; position: fixed; bottom: 20px; right: 20px; background: #23a55a; color: white; padding: 12px 20px; border-radius: 6px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        #toast-alert { display: none; position: fixed; bottom: 20px; right: 20px; background: #23a55a; color: white; padding: 12px 20px; border-radius: 6px; font-weight: bold; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.3s; }
     </style>
 </head>
 <body>
@@ -76,49 +84,50 @@
     </div>
 
     <div class="container">
-        <!-- 첫 번째 열: 일일 미션 -->
         <div class="section" style="flex: 1.2;">
             <h2>🎯 오늘의 일일 미션</h2>
             <div id="mission-container">미션 정보를 불러오는 중...</div>
         </div>
 
-        <!-- 두 번째 열: 서버 멤버 목록 + 실시간 검색 필터 -->
         <div class="section" style="flex: 1.2;">
-            <h2>👥 서버 멤버 목록</h2>
-            <input type="text" id="member-search-input" class="search-input" placeholder="🔍 멤버 닉네임 검색..." oninput="filterMemberList()">
-            <div style="max-height: 235px; overflow-y: auto;">
-                <table class="member-table">
-                    <thead>
-                        <tr>
-                            <th>유저</th>
-                            <th>상태</th>
-                        </tr>
-                    </thead>
-                    <tbody id="server-member-tbody">
-                        <tr><td colspan="2" style="color: #949ba4; text-align: center;">멤버 목록 로딩 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <h2>📜 봇 명령어 목록</h2>
+            <ul class="cmd-list" style="margin-top: 15px;">
+                <li class="cmd-item"><span class="cmd-name">!raindrop</span> - 퀴즈 이벤트 출제 [개발자 전용]</li>
+                <li class="cmd-item"><span class="cmd-name">!point [@유저]</span> - 보유 포인트 조회</li>
+                <li class="cmd-item"><span class="cmd-name">!pointlist</span> - 포인트 순위 TOP 10</li>
+                <li class="cmd-item"><span class="cmd-name">!포인트거래 [@유저] [금액]</span> - 포인트 송금 [수수료 10%]</li>
+                <li class="cmd-item"><span class="cmd-name">!로블확인 [닉네임]</span> - 로블록스 유저 정보 조회</li>
+                <li class="cmd-item"><span class="cmd-name">!일일미션상황</span> - 채팅 일일 미션 현황 조회</li>
+                <li class="cmd-item"><span class="cmd-name">!website</span> - 웹사이트 링크 보기</li>
+            </ul>
         </div>
 
-        <!-- 세 번째 열: 진행 중인 경매 -->
         <div class="section" style="flex: 1;">
             <h2>🔨 진행 중인 경매</h2>
             <div id="auction-container">경매 목록을 불러오는 중...</div>
         </div>
     </div>
 
-    <!-- 💸 포인트 거래 팝업 모달 (플레이어 검색 선택 방식) -->
+    <!-- 💸 포인트 거래 팝업 모달 -->
     <div id="transferModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:#5865f2;">💸 포인트 송금하기</h3>
             
-            <label style="font-size: 13px;">받을 사람 검색 및 선택</label>
-            <input type="text" id="modal-search-input" class="modal-input" placeholder="🔍 닉네임 검색..." oninput="filterModalMembers()">
-            <select id="modal-target-select" class="modal-select" size="4" style="height: 100px;" onchange="selectModalTarget()">
-                <!-- 검색 결과 동적 생성 -->
-            </select>
-            <div id="selected-target-display" style="font-size: 12px; color: #57f287; margin-top: 4px;">선택된 유저 없음</div>
+            <label style="font-size: 13px;">받을 유저 검색 (서버 멤버)</label>
+            <div style="position: relative;">
+                <input type="text" id="modal-target-search" class="modal-input" placeholder="유저 닉네임을 입력하세요 (클릭 시 전체 목록)" oninput="onMemberSearchInput()" onclick="onMemberSearchInput()" autocomplete="off">
+                <input type="hidden" id="modal-target-id">
+                <div id="memberDropdown" class="member-dropdown"></div>
+            </div>
+            
+            <div id="targetProfileCard" class="target-profile-card">
+                <img id="targetAvatar" src="" alt="Target Avatar">
+                <div class="profile-info">
+                    <span id="targetUsername" class="profile-name">유저 이름</span>
+                    <span id="targetIdText" class="profile-id">ID: 000000000000</span>
+                </div>
+            </div>
+            <div id="idStatusText" style="font-size: 11px; color: #949ba4; margin-top: 4px;">목록에서 송금할 유저를 선택하세요.</div>
 
             <label style="font-size: 13px; margin-top: 12px; display: block;">보낼 포인트 금액</label>
             <input type="number" id="modal-transfer-amount" class="modal-input" min="1" placeholder="송금할 포인트 입력" oninput="validateTransferForm()">
@@ -147,14 +156,15 @@
         </div>
     </div>
 
+    <!-- UI 토스트 알림창 -->
     <div id="toast-alert">알림 메시지</div>
 
     <script>
         const socket = io();
         let currentUser = null;
         let myCurrentPoints = 0;
-        let serverMembers = []; 
-        let selectedTargetId = null;
+        let isTargetValid = false;
+        let serverMembers = [];
 
         fetch('/api/user')
             .then(res => res.json())
@@ -166,8 +176,12 @@
                 socket.emit('request_user_point', { user_id: currentUser.id });
                 socket.emit('request_user_mission', { user_id: currentUser.id });
                 socket.emit('request_auctions');
-                socket.emit('request_server_members');
+                socket.emit('get_cached_members');
             });
+
+        socket.on('update_server_members', (members) => {
+            serverMembers = members;
+        });
 
         socket.on('update_user_point', (res) => {
             if (res.user_id === currentUser.id) {
@@ -176,97 +190,6 @@
                 validateTransferForm();
             }
         });
-
-        socket.on('update_server_members', (members) => {
-            serverMembers = members || [];
-            renderMemberList(serverMembers);
-        });
-
-        // 대시보드 멤버 리스트 렌더링
-        function renderMemberList(members) {
-            const tbody = document.getElementById('server-member-tbody');
-            tbody.innerHTML = '';
-
-            if (members.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" style="color: #949ba4; text-align: center;">검색된 멤버가 없습니다.</td></tr>';
-                return;
-            }
-
-            members.forEach(m => {
-                const tr = document.createElement('tr');
-                const isMe = currentUser && m.id === currentUser.id;
-                tr.innerHTML = `
-                    <td><img src="${m.avatar}" class="member-avatar">${m.username} ${isMe ? '(나)' : ''}</td>
-                    <td style="color: #949ba4; font-size: 11px;">${isMe ? '접속 중' : '멤버'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // 대시보드 실시간 멤버 검색 필터
-        function filterMemberList() {
-            const keyword = document.getElementById('member-search-input').value.toLowerCase();
-            const filtered = serverMembers.filter(m => m.username.toLowerCase().includes(keyword));
-            renderMemberList(filtered);
-        }
-
-        // 모달창 열기
-        function openTransferModal() {
-            document.getElementById('transferModal').style.display = 'block';
-            document.getElementById('modal-search-input').value = '';
-            document.getElementById('modal-transfer-amount').value = '';
-            document.getElementById('feeBox').style.display = 'none';
-            selectedTargetId = null;
-            document.getElementById('selected-target-display').innerText = '선택된 유저 없음';
-            updateModalSelectList(serverMembers);
-        }
-
-        function closeTransferModal() { 
-            document.getElementById('transferModal').style.display = 'none'; 
-        }
-
-        // 모달 내 플레이어 검색 필터
-        function filterModalMembers() {
-            const keyword = document.getElementById('modal-search-input').value.toLowerCase();
-            const filtered = serverMembers.filter(m => m.username.toLowerCase().includes(keyword) && (!currentUser || m.id !== currentUser.id));
-            updateModalSelectList(filtered);
-        }
-
-        // 모달 드롭다운 리스트 업데이트
-        function updateModalSelectList(members) {
-            const selectBox = document.getElementById('modal-target-select');
-            selectBox.innerHTML = '';
-
-            if (members.length === 0) {
-                const opt = document.createElement('option');
-                opt.value = "";
-                opt.textContent = "-- 검색된 유저가 없습니다 --";
-                opt.disabled = true;
-                selectBox.appendChild(opt);
-                return;
-            }
-
-            members.forEach(m => {
-                if (currentUser && m.id !== currentUser.id) {
-                    const opt = document.createElement('option');
-                    opt.value = m.id;
-                    opt.textContent = m.username;
-                    selectBox.appendChild(opt);
-                }
-            });
-        }
-
-        // 모달 내 유저 선택
-        function selectModalTarget() {
-            const selectBox = document.getElementById('modal-target-select');
-            selectedTargetId = selectBox.value;
-            const selectedOpt = selectBox.options[selectBox.selectedIndex];
-            
-            if (selectedOpt && selectedTargetId) {
-                document.getElementById('selected-target-display').innerText = `선택됨: ${selectedOpt.textContent}`;
-            }
-            validateTransferForm();
-        }
 
         socket.on('update_user_mission', (res) => {
             if (res.user_id !== currentUser.id) return;
@@ -329,14 +252,78 @@
             if (res.user_id === currentUser.id) showToast(res.message);
         });
 
+        function openTransferModal() { 
+            document.getElementById('transferModal').style.display = 'block'; 
+            socket.emit('get_cached_members');
+        }
+        function closeTransferModal() { 
+            document.getElementById('transferModal').style.display = 'none';
+            document.getElementById('memberDropdown').style.display = 'none';
+        }
+
+        // 서버 멤버 실시간 검색 (검색어 없을 때도 기본 15명, 유사한 최대 15명 표시)
+        function onMemberSearchInput() {
+            const keyword = document.getElementById('modal-target-search').value.toLowerCase().trim();
+            const dropdown = document.getElementById('memberDropdown');
+            
+            // 본인 제외 필터링
+            let filtered = serverMembers.filter(m => m.id !== currentUser.id);
+            if (keyword !== "") {
+                filtered = filtered.filter(m => m.username.toLowerCase().includes(keyword));
+            }
+            
+            // 최대 15개 제한
+            filtered = filtered.slice(0, 15);
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 10px; color: #949ba4; font-size: 12px; text-align: center;">검색 결과가 없습니다.</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(m => {
+                html += `
+                    <div class="member-option" onclick="selectMember('${m.id}', '${m.username}', '${m.avatar}')">
+                        <img src="${m.avatar}" alt="">
+                        <span style="font-size: 13px; font-weight: bold; color: #f2f3f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.username}</span>
+                    </div>
+                `;
+            });
+            dropdown.innerHTML = html;
+            dropdown.style.display = 'block';
+        }
+
+        function selectMember(id, username, avatar) {
+            document.getElementById('modal-target-search').value = username;
+            document.getElementById('modal-target-id').value = id;
+            document.getElementById('memberDropdown').style.display = 'none';
+
+            document.getElementById('targetAvatar').src = avatar;
+            document.getElementById('targetUsername').innerText = username;
+            document.getElementById('targetIdText').innerText = `ID: ${id}`;
+            document.getElementById('targetProfileCard').style.display = 'flex';
+            document.getElementById('idStatusText').innerText = '✅ 유저 선택 완료';
+            document.getElementById('idStatusText').style.color = '#23a55a';
+
+            isTargetValid = true;
+            validateTransferForm();
+        }
+
+        // 바깥 영역 클릭 시 드롭다운 닫기
+        window.addEventListener('click', function(e) {
+            if (!document.getElementById('modal-target-search').contains(e.target) && !document.getElementById('memberDropdown').contains(e.target)) {
+                document.getElementById('memberDropdown').style.display = 'none';
+            }
+        });
+
         function validateTransferForm() {
-            const amountInput = document.getElementById('modal-transfer-amount');
             const feeBox = document.getElementById('feeBox');
             const modalError = document.getElementById('modalError');
             const btn = document.getElementById('btnSubmitTransfer');
-            let amount = parseInt(amountInput.value);
+            let amount = parseInt(document.getElementById('modal-transfer-amount').value);
 
-            if (!selectedTargetId) {
+            if (!isTargetValid) {
                 feeBox.style.display = 'none';
                 modalError.style.display = 'none';
                 btn.disabled = true;
@@ -379,12 +366,12 @@
         }
 
         function submitTransfer() {
-            if (!selectedTargetId) return showToast('보낼 유저를 선택하세요.');
+            const targetId = document.getElementById('modal-target-id').value.trim();
             const amount = parseInt(document.getElementById('modal-transfer-amount').value);
 
             socket.emit('submit_transfer', {
                 sender_id: currentUser.id,
-                target_id: selectedTargetId,
+                target_id: targetId,
                 amount: amount
             });
         }
@@ -394,6 +381,14 @@
                 showToast(res.message);
                 if (res.success) {
                     closeTransferModal();
+                    document.getElementById('modal-target-search').value = '';
+                    document.getElementById('modal-target-id').value = '';
+                    document.getElementById('modal-transfer-amount').value = '';
+                    document.getElementById('targetProfileCard').style.display = 'none';
+                    document.getElementById('idStatusText').innerText = '목록에서 송금할 유저를 선택하세요.';
+                    document.getElementById('idStatusText').style.color = '#949ba4';
+                    document.getElementById('feeBox').style.display = 'none';
+                    isTargetValid = false;
                     socket.emit('request_user_point', { user_id: currentUser.id });
                 }
             }
