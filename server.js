@@ -67,7 +67,7 @@ function checkAuth(req, res, next) {
     res.redirect('/');
 }
 
-// 메인 페이지 (로그인 버튼)
+// 메인 페이지
 app.get('/', (req, res) => {
     if (req.isAuthenticated && req.isAuthenticated()) {
         return res.redirect('/dashboard');
@@ -82,18 +82,17 @@ app.get('/', (req, res) => {
     `);
 });
 
-// 대시보드 HTML 파일 제공
-// 대시보드 HTML 파일 제공
+// 대시보드 페이지 라우트
 app.get('/dashboard', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// 🛒 포인트 상점 페이지 라우트 추가
+// 포인트 상점 페이지 라우트
 app.get('/shop', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'shop.html'));
 });
 
-// 🏆 실시간 랭킹 페이지 라우트 추가
+// 실시간 랭킹 페이지 라우트
 app.get('/ranking', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'ranking.html'));
 });
@@ -154,7 +153,6 @@ app.post('/api/shop/buy', checkAuth, (req, res) => {
     });
 });
 
-
 let botSocket = null;
 let latestRankings = [];
 
@@ -180,15 +178,6 @@ io.on('connection', (socket) => {
         io.emit('transfer_response', data);
     });
 
-    socket.on('request_user_mission', (data) => {
-        if (botSocket) botSocket.emit('get_user_mission', data);
-    });
-
-    socket.on('send_user_mission', (data) => {
-        io.emit('update_user_mission', data);
-    });
-
-    // 랭킹 데이터 수신 및 브로드캐스트
     socket.on('send_ranking_data', (data) => {
         latestRankings = data;
         io.emit('update_ranking_data', data);
