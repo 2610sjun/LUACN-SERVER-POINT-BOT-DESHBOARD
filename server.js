@@ -5,7 +5,7 @@ const session = require('express-session');
 const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
 const path = require('path');
-const axios = require('axios'); // 유저 정보 조회를 위해 axios 필요 (npm install axios 필요할 수 있음)
+const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
@@ -78,7 +78,7 @@ app.get('/api/user', checkAuth, (req, res) => {
     });
 });
 
-// 📌 [신규] 디스코드 ID로 유저 프로필 정보를 가져오는 API (봇 토큰 활용)
+// 📌 디스코드 ID로 유저 프로필 정보를 가져오는 API (상세 에러 로그 추가됨)
 app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
     const targetId = req.params.id;
     try {
@@ -98,6 +98,8 @@ app.get('/api/discord-user/:id', checkAuth, async (req, res) => {
             avatar: avatarUrl
         });
     } catch (error) {
+        // 🔥 어떤 에러 때문에 실패했는지 Render 콘솔에 정확하게 출력합니다.
+        console.error('디스코드 유저 조회 에러 상세:', error.response ? error.response.data : error.message);
         res.json({ success: false, message: '존재하지 않거나 조회할 수 없는 유저 ID입니다.' });
     }
 });
